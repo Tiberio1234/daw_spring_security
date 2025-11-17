@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spring Security Demo - Task Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .security-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            background: #10b981;
+            color: white;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-top: 10px;
+            margin-right: 8px;
+        }
+
+        .auth-section {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .feature-highlight {
+            background: #f0f4ff;
+            padding: 12px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            font-size: 16px;
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .user-info {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .user-info strong {
+            color: #667eea;
+        }
+
+        .task-list {
+            margin-top: 20px;
+        }
+
+        .task-item {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .task-item.completed {
+            opacity: 0.6;
+            border-left-color: #10b981;
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+
+        .task-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .task-meta {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-success {
+            background: #10b981;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .message.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+
+        .message.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+
+        .message.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+
+        .security-demo {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .security-demo h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .logout-btn {
+            background: #ef4444;
+            margin-top: 15px;
+        }
+
+        .logout-btn:hover {
+            background: #dc2626;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #667eea;
+            color: white;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-left: 8px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-card h4 {
+            font-size: 14px;
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+
+        .stat-card p {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 968px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .demo-users {
+            background: #fef3c7;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        .demo-users strong {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .security-info {
+            background: #f0f4ff;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+
+        .security-info code {
+            background: #e0e7ff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🔐 Spring Security Demo - Task Assignment System</h1>
+        <p>Role-Based Task Management with Method Security & SpEL Authorization</p>
+        <span class="security-badge">@PreAuthorize</span>
+        <span class="security-badge">@PostAuthorize</span>
+        <span class="security-badge">Custom SpEL</span>
+        <span class="security-badge">Role-Based Access</span>
+    </div>
+
+    <div id="authSection" class="auth-section">
+        <h2>Authentication & Authorization</h2>
+
+        <div class="feature-highlight">
+            <strong>🎯 Demo Concept:</strong> This application demonstrates hierarchical role-based access control.
+            ADMIN assigns to MANAGER/USER → MANAGER assigns to USER → USER completes tasks.
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('login')">Login</button>
+            <button class="tab" onclick="switchTab('register')">Register New User</button>
+        </div>
+
+        <div id="loginTab" class="tab-content active">
+            <div class="security-info">
+                <strong>Spring Security Flow:</strong><br>
+                Credentials → <code>AuthenticationManager</code> → <code>DaoAuthenticationProvider</code> →
+                <code>UserDetailsService</code> → <code>BCryptPasswordEncoder.matches()</code> →
+                <code>SecurityContextHolder</code>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="loginUsername" value="admin" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" value="admin123" required>
+                </div>
+                <button type="submit">Login & Generate JWT</button>
+            </form>
+
+            <div class="demo-users">
+                <strong>Demo Users:</strong>
+                • admin/admin123 → Can assign tasks to managers and users<br>
+                • manager1/manager123 → Can assign tasks to users<br>
+                • user1/user123 → Can only view and complete assigned tasks
+            </div>
+        </div>
+
+        <div id="registerTab" class="tab-content">
+            <div class="security-info">
+                <strong>Password Security:</strong><br>
+                Raw password → <code>BCryptPasswordEncoder.encode()</code> →
+                Hashed password stored in DB (with automatic salt)
+            </div>
+
+            <form id="registerForm">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="regUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="regPassword" required>
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="regRole">
+                        <option value="ROLE_USER">User (can complete tasks)</option>
+                        <option value="ROLE_MANAGER">Manager (can assign to users)</option>
+                        <option value="ROLE_ADMIN">Admin (can assign to anyone)</option>
+                    </select>
+                </div>
+                <button type="submit">Register User</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="appSection" class="hidden">
+        <div class="security-demo">
+            <div class="user-info">
+                <strong>Current Principal:</strong> <span id="currentUser"></span>
+                <span id="userRoles"></span>
+            </div>
+
+            <div class="stats" id="statsContainer">
+                <div class="stat-card">
+                    <h4>Total Tasks</h4>
+                    <p id="totalTasks">0</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Completed</h4>
+                    <p id="completedTasks">0</p>
+                </div>
+                <div class="stat-card">
+                    <h4>Pending</h4>
+                    <p id="pendingTasks">0</p>
+                </div>
+            </div>
+
+            <button class="logout-btn" onclick="logout()">Logout (Clear SecurityContext)</button>
+        </div>
+
+        <div class="grid-2">
+            <div class="security-demo" id="taskCreationSection">
+                <h3>📝 Create & Assign Task</h3>
+                <div class="security-info">
+                    <strong>Method Security:</strong> <code>@PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")</code><br>
+                    Business validation enforces role hierarchy in service layer
+                </div>
+
+                <form id="taskForm">
+                    <div class="form-group">
+                        <label>Task Title</label>
+                        <input type="text" id="taskTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="taskDesc" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Assign To</label>
+                        <select id="assignTo" required>
+                            <option value="">Loading users...</option>
+                        </select>
+                    </div>
+                    <button type="submit">Create & Assign Task</button>
+                </form>
+            </div>
+
+            <div class="security-demo">
+                <h3>📋 My Tasks</h3>
+                <div class="security-info">
+                    <strong>Authorization Rules:</strong><br>
+                    • USER: Only assigned tasks<br>
+                    • MANAGER: Assigned + created tasks<br>
+                    • ADMIN: All tasks in system
+                </div>
+
+                <div class="task-list" id="taskList">
+                    <div class="empty-state">
+                        <p>Loading tasks...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="messageArea"></div>
+</div>
+
+<script>
+    const API_URL = 'http://localhost:8080/api';
+    let currentToken = null;
+    let currentUserData = null;
+
+    function switchTab(tab) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+        event.target.classList.add('active');
+        document.getElementById(tab + 'Tab').classList.add('active');
+    }
+
+    function showMessage(message, type = 'info') {
+        const messageArea = document.getElementById('messageArea');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${type}`;
+        messageDiv.textContent = message;
+        messageArea.appendChild(messageDiv);
+
+        setTimeout(() => messageDiv.remove(), 5000);
+    }
+
+    async function apiCall(endpoint, options = {}) {
+        const headers = {
+            'Content-Type': 'application/json',
+            ...options.headers
+        };
+
+        if (currentToken) {
+            headers['Authorization'] = `Bearer ${currentToken}`;
+        }
+
+        const response = await fetch(`${API_URL}${endpoint}`, {
+            ...options,
+            headers
+        });
+
+        return response;
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const username = document.getElementById('loginUsername').value;
+        const password = document.getElementById('loginPassword').value;
+
+        try {
+            const response = await apiCall('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({ username, password })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                currentToken = data.token;
+
+                const roles = data.roles.map(auth => auth.authority || auth);
+
+                currentUserData = {
+                    username: data.username,
+                    roles: roles
+                };
+
+                showMessage('✓ JWT token generated! SecurityContextHolder populated', 'success');
+
+                document.getElementById('authSection').classList.add('hidden');
+                document.getElementById('appSection').classList.remove('hidden');
+
+                await initializeApp();
+            } else {
+                const error = await response.json();
+                showMessage('✗ Authentication failed: ' + (error.error || 'Invalid credentials'), 'error');
+            }
+        } catch (error) {
+            showMessage('✗ Cannot reach backend. Ensure Spring Boot is running on port 8080', 'error');
+            console.error('Login error:', error);
+        }
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const username = document.getElementById('regUsername').value;
+        const password = document.getElementById('regPassword').value;
+        const role = document.getElementById('regRole').value;
+
+        try {
+            const response = await apiCall('/auth/register', {
+                method: 'POST',
+                body: JSON.stringify({ username, password, role })
+            });
+
+            if (response.ok) {
+                showMessage(`✓ User registered! Password hashed with BCryptPasswordEncoder`, 'success');
+
+                document.getElementById('regUsername').value = '';
+                document.getElementById('regPassword').value = '';
+
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.querySelector('.tab').classList.add('active');
+                document.getElementById('loginTab').classList.add('active');
+            } else {
+                const error = await response.json();
+                showMessage('✗ ' + (error.error || 'Registration failed'), 'error');
+            }
+        } catch (error) {
+            showMessage('✗ Connection error', 'error');
+            console.error('Registration error:', error);
+        }
+    });
+
+    document.getElementById('taskForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const title = document.getElementById('taskTitle').value;
+        const description = document.getElementById('taskDesc').value;
+        const assignToUsername = document.getElementById('assignTo').value;
+
+        try {
+            const response = await apiCall('/tasks', {
+                method: 'POST',
+                body: JSON.stringify({ title, description, assignToUsername })
+            });
+
+            if (response.ok) {
+                showMessage('✓ Task created! @PreAuthorize check passed, business rules validated', 'success');
+
+                document.getElementById('taskTitle').value = '';
+                document.getElementById('taskDesc').value = '';
+
+                await loadTasks();
+                await loadStats();
+            } else {
+                const error = await response.json();
+                showMessage('✗ ' + (error.error || 'Failed to create task'), 'error');
+            }
+        } catch (error) {
+            showMessage('✗ Error creating task', 'error');
+            console.error('Task creation error:', error);
+        }
+    });
+
+    async function initializeApp() {
+        updateUserInfo();
+        await loadAssignableUsers();
+        await loadTasks();
+        await loadStats();
+
+        // Hide task creation for regular users
+        if (!currentUserData.roles.includes('ROLE_MANAGER') &&
+            !currentUserData.roles.includes('ROLE_ADMIN')) {
+            document.getElementById('taskCreationSection').style.display = 'none';
+        }
+    }
+
+    function updateUserInfo() {
+        document.getElementById('currentUser').textContent = currentUserData.username;
+
+        const rolesHtml = currentUserData.roles.map(role =>
+            `<span class="role-badge">${role}</span>`
+        ).join('');
+        document.getElementById('userRoles').innerHTML = rolesHtml;
+    }
+
+    async function loadAssignableUsers() {
+        try {
+            const response = await apiCall('/tasks/assignable-users');
+
+            if (response.ok) {
+                const users = await response.json();
+                const select = document.getElementById('assignTo');
+                select.innerHTML = '<option value="">Select user...</option>';
+
+                users.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user.username;
+                    option.textContent = `${user.username} (${user.roles.join(', ')})`;
+                    select.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error loading users:', error);
+        }
+    }
+
+    async function loadTasks() {
+        try {
+            const response = await apiCall('/tasks');
+
+            if (response.ok) {
+                const tasks = await response.json();
+                renderTasks(tasks);
+            } else {
+                showMessage('✗ Failed to load tasks', 'error');
+            }
+        } catch (error) {
+            console.error('Error loading tasks:', error);
+            showMessage('✗ Error loading tasks', 'error');
+        }
+    }
+
+    async function loadStats() {
+        try {
+            const response = await apiCall('/tasks/stats');
+
+            if (response.ok) {
+                const stats = await response.json();
+                document.getElementById('totalTasks').textContent = stats.total;
+                document.getElementById('completedTasks').textContent = stats.completed;
+                document.getElementById('pendingTasks').textContent = stats.pending;
+            }
+        } catch (error) {
+            console.error('Error loading stats:', error);
+        }
+    }
+
+    function renderTasks(tasks) {
+        const taskList = document.getElementById('taskList');
+
+        if (tasks.length === 0) {
+            taskList.innerHTML = '<div class="empty-state"><p>No tasks yet</p></div>';
+            return;
+        }
+
+        taskList.innerHTML = '';
+
+        tasks.forEach(task => {
+            const taskDiv = document.createElement('div');
+            taskDiv.className = 'task-item' + (task.completed ? ' completed' : '');
+
+            const canComplete = task.assignedTo === currentUserData.username;
+            const canDelete = task.createdBy === currentUserData.username ||
+                currentUserData.roles.includes('ROLE_ADMIN');
+
+            taskDiv.innerHTML = `
+                    <div class="task-header">
+                        <div>
+                            <div class="task-title">${task.title}</div>
+                            <div class="task-meta">
+                                Assigned to: <strong>${task.assignedTo}</strong> |
+                                Created by: <strong>${task.createdBy}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <p style="color: #666; font-size: 14px; margin: 8px 0;">${task.description}</p>
+                    <div class="task-actions">
+                        ${canComplete ? `
+                            <button class="btn-small ${task.completed ? '' : 'btn-success'}"
+                                    onclick="toggleTask(${task.id}, ${!task.completed})">
+                                ${task.completed ? 'Mark Incomplete' : 'Mark Complete'}
+                            </button>
+                        ` : ''}
+                        ${canDelete ? `
+                            <button class="btn-small btn-danger" onclick="deleteTask(${task.id})">
+                                Delete
+                            </button>
+                        ` : ''}
+                        ${!canComplete && !canDelete ? '<em style="color: #999; font-size: 13px;">View only</em>' : ''}
+                    </div>
+                `;
+
+            taskList.appendChild(taskDiv);
+        });
+    }
+
+    async function toggleTask(taskId, completed) {
+        try {
+            const response = await apiCall(`/tasks/${taskId}/complete`, {
+                method: 'PATCH',
+                body: JSON.stringify({ completed })
+            });
+
+            if (response.ok) {
+                showMessage('✓ Task updated! @PreAuthorize("@taskSecurityService.canCompleteTask()") passed', 'success');
+                await loadTasks();
+                await loadStats();
+            } else {
+                const error = await response.json();
+                showMessage('✗ Access denied: ' + (error.error || 'Cannot update task'), 'error');
+            }
+        } catch (error) {
+            showMessage('✗ Error updating task', 'error');
+            console.error('Toggle error:', error);
+        }
+    }
+
+    async function deleteTask(taskId) {
+        if (!confirm('Delete this task?')) return;
+
+        try {
+            const response = await apiCall(`/tasks/${taskId}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                showMessage('✓ Task deleted! Authorization check passed', 'success');
+                await loadTasks();
+                await loadStats();
+            } else {
+                const error = await response.json();
+                showMessage('✗ ' + (error.error || 'Cannot delete task'), 'error');
+            }
+        } catch (error) {
+            showMessage('✗ Error deleting task', 'error');
+            console.error('Delete error:', error);
+        }
+    }
+
+    function logout() {
+        currentToken = null;
+        currentUserData = null;
+
+        document.getElementById('authSection').classList.remove('hidden');
+        document.getElementById('appSection').classList.add('hidden');
+
+        showMessage('✓ Logged out. SecurityContextHolder cleared', 'info');
+    }
+
+    window.addEventListener('load', () => {
+        showMessage('👋 Welcome! Login to see role-based task management in action', 'info');
+    });
+</script>
+</body>
+</html>
