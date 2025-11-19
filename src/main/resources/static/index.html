@@ -668,8 +668,12 @@
         await loadStats();
 
         // Hide task creation for regular users
-        if (!currentUserData.roles.includes('ROLE_MANAGER') &&
-            !currentUserData.roles.includes('ROLE_ADMIN')) {
+        if (currentUserData.roles.includes('ROLE_MANAGER') ||
+            currentUserData.roles.includes('ROLE_ADMIN')) {
+
+            document.getElementById('taskCreationSection').style.display = 'block';
+        }
+        else {
             document.getElementById('taskCreationSection').style.display = 'none';
         }
     }
